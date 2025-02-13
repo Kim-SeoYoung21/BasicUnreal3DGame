@@ -2,6 +2,7 @@
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "SpawnVolume.h"
 
 ABaseItem::ABaseItem()
 {
@@ -90,5 +91,17 @@ FName ABaseItem::GetItemType() const
 }
 void ABaseItem::DestroyItem()
 {
+	TArray<AActor*> FoundVolumes;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASpawnVolume::StaticClass(), FoundVolumes);
+
+	for (AActor* Volume : FoundVolumes)
+	{
+		ASpawnVolume* SpawnVolume = Cast<ASpawnVolume>(Volume);
+		if (SpawnVolume)
+		{
+			SpawnVolume->RemoveSpawnedItem(this);
+		}
+	}
+
 	Destroy();
 }
