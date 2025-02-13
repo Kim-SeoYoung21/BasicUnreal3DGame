@@ -15,6 +15,9 @@ ASpartaGameState::ASpartaGameState()
 	LevelDuration = 30.0f;
 	CurrentLevelIndex = 0;
 	MaxLevels = 3;
+	CurrentWaveIndex = 0;
+	WaveDuration = 10.0f; // 웨이브 시간: 10초
+	MaxWave = 3;
 }
 
 void ASpartaGameState::BeginPlay()
@@ -73,26 +76,7 @@ void ASpartaGameState::StartLevel()
 	SpawnedCoinCount = 0;
 	CollectedCoinCount = 0;
 
-	TArray<AActor*> FoundVolumes;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASpawnVolume::StaticClass(), FoundVolumes);
-
-	const int32 ItemToSpawn = 40;
-
-	for (int32 i = 0; i < ItemToSpawn; i++)
-	{
-		if (FoundVolumes.Num() > 0)
-		{
-			ASpawnVolume* SpawnVolume = Cast<ASpawnVolume>(FoundVolumes[0]);
-			if (SpawnVolume)
-			{
-				AActor* SpawnedActor = SpawnVolume->SpawnRandomItem();
-				if (SpawnedActor && SpawnedActor->IsA(ACoinItem::StaticClass()))
-				{
-					SpawnedCoinCount++;
-				}
-			}
-		}
-	}
+	StartWave();
 
 	GetWorldTimerManager().SetTimer(
 		LevelTimerHandle,
@@ -199,5 +183,82 @@ void ASpartaGameState::UpdateHUD()
 				}
 			}
 		}
+	}
+}
+
+void ASpartaGameState::StartWave()
+{
+	if (CurrentWaveIndex >= MaxWave)
+	{
+		EndLevel();
+		return;
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Wave %d started!"), CurrentWaveIndex + 1));
+
+
+	ClearSpawnedItems();
+
+	SpawnItemsForWave();
+
+	UE_LOG(LogTemp, Warning, TEXT("ASpartaGameState::StartWave()"));
+
+	GetWorldTimerManager().SetTimer(
+		WaveTimerHandle,
+		this,
+		&ASpartaGameState::OnWaveEnd,
+		WaveDuration,
+		false
+	);
+}
+
+void ASpartaGameState::ClearSpawnedItems()
+{
+	TArray<AActor*> FoundVolumes;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASpawnVolume::StaticClass(), FoundVolumes);
+
+	for (AActor* Volume : FoundVolumes)
+	{
+		ASpawnVolume* SpawnVolume = Cast<ASpawnVolume>(Volume);
+		if (SpawnVolume)
+		{
+			SpawnVolume->ClearSpawnedItems();
+		}
+	}
+}
+
+void ASpartaGameState::SpawnItemsForWave()
+{
+	TArray<AActor*> FoundVolumes;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASpawnVolume::StaticClass(), FoundVolumes);
+
+	if (FoundVolumes.Num() == 0)
+	{
+		return;
+	}
+
+	for (AActor* Volume : FoundVolumes)
+	{
+		ASpawnVolume* SpawnVolume = Cast<ASpawnVolume>(Volume);
+		if (SpawnVolume)
+		{
+			for (int32 i = 0; i < 20; i++)
+			{
+				SpawnVolume->SpawnRandomItem();
+			}
+		}
+	}
+}
+
+void ASpartaGameState::OnWaveEnd()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Wave %d ended!"), CurrentWaveIndex + 1);
+	CurrentWaveIndex++;
+	if (CurrentWaveIndex < MaxWave)
+	{
+		StartWave();  // 다음 웨이브 시작
+	}
+	else
+	{
+		EndLevel();
 	}
 }

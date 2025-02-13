@@ -22,7 +22,12 @@ AActor* ASpawnVolume::SpawnRandomItem()
     {
         if (UClass* ActualClass = SelectedRow->ItemClass.Get())
         {
-            return SpawnItem(ActualClass);
+            AActor* SpawnedItem = SpawnItem(ActualClass);
+            if (SpawnedItem)
+            {
+                SpawnedActors.Add(SpawnedItem); 
+            }
+            return SpawnedItem;
         }
     }
 
@@ -82,6 +87,8 @@ FVector ASpawnVolume::GetRandomPointInVolume() const
 
 AActor* ASpawnVolume::SpawnItem(TSubclassOf<AActor> ItemClass)
 {
+    GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT(" ASpawnVolume::SpawnItem()")));
+
     if (!ItemClass) return nullptr;
 
     AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(
@@ -91,4 +98,26 @@ AActor* ASpawnVolume::SpawnItem(TSubclassOf<AActor> ItemClass)
     );
 
     return SpawnedActor;
+}
+
+void ASpawnVolume::ClearSpawnedItems()
+{
+    GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT(" ASpawnVolume::ClearSpawnedItems()")));
+    for (AActor* Item : SpawnedActors)
+    {
+        if (Item && IsValid(Item))
+        {
+            Item->Destroy();
+        }
+    }
+    SpawnedActors.Empty();
+}
+
+void ASpawnVolume::RemoveSpawnedItem(AActor* Item)
+{
+    GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT(" ASpawnVolume::RemoveSpawnedItem()")));
+    if (SpawnedActors.Contains(Item))
+    {
+        SpawnedActors.Remove(Item);
+    }
 }

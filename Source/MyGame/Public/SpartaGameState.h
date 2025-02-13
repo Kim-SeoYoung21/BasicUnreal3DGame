@@ -22,13 +22,20 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level")
     float LevelDuration;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level")
-    int32 CurrentLevelIndex;
+    int32 CurrentLevelIndex; // 현제 웨이브
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level")
     int32 MaxLevels;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level")
+    int32 CurrentWaveIndex;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level")
+    int32 MaxWave; // 최대 웨이브
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level")
     TArray<FName> LevelMapNames;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level")
+    float WaveDuration; // 웨이브 시간
 
     FTimerHandle LevelTimerHandle;
+    FTimerHandle WaveTimerHandle;
     FTimerHandle HUDUpdateTimerHandle;
 
     UFUNCTION(BlueprintPure, Category = "Score")
@@ -44,4 +51,10 @@ public:
     void OnCoinCollected();
     void EndLevel();
     void UpdateHUD();
+
+    // wave 추가
+    void StartWave();
+    void OnWaveEnd();
+    void SpawnItemsForWave();
+    void ClearSpawnedItems();
 };
